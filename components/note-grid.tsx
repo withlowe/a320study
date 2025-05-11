@@ -6,11 +6,11 @@ import type { Note, Folder } from "@/lib/types"
 import { ChevronDown, FolderIcon, TagIcon, X } from "lucide-react"
 
 interface NoteGridProps {
-  notes: Note[]
-  folders: Folder[]
+  initialNotes: Note[]
+  initialFolders: Folder[]
 }
 
-export function NoteGrid({ notes, folders }: NoteGridProps) {
+export function NoteGrid({ initialNotes, initialFolders }: NoteGridProps) {
   const [folderFilter, setFolderFilter] = useState<string | null>(null)
   const [tagFilter, setTagFilter] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -37,49 +37,60 @@ export function NoteGrid({ notes, folders }: NoteGridProps) {
     }
   }, [])
 
-  // Listen for search events from the header
+  // Set up search input listener
   useEffect(() => {
-    const handleSearch = (e: CustomEvent) => {
-      setSearchTerm(e.detail)
+    const searchInput = document.getElementById("search-input") as HTMLInputElement
+    if (searchInput) {
+      const handleSearch = () => {
+        setSearchTerm(searchInput.value)
+      }
+
+      searchInput.addEventListener("input", handleSearch)
+      return () => {
+        searchInput.removeEventListener("input", handleSearch)
+      }
     }
+  }, [])
 
-    const handleTagFilter = (e: CustomEvent) => {
-      setTagFilter(e.detail)
-    }
-
-    window.addEventListener("search-notes", handleSearch as EventListener)
-    window.addEventListener("filter-tag", handleTagFilter as EventListener)
-
-    return () => {
-      window.removeEventListener("search-notes", handleSearch as EventListener)
-      window.removeEventListener("filter-tag", handleTagFilter as EventListener)
+  // Listen for URL tag parameter
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search)
+      const tag = urlParams.get("tag")
+      if (tag) {
+        setTagFilter(tag)
+      }
+    } catch (e) {
+      console.error("Error parsing URL parameters:", e)
     }
   }, [])
 
   // Extract all unique tags from notes
   const allTags = useMemo(() => {
     const tagSet = new Set<string>()
-    notes.forEach((note) => {
+    initialNotes.forEach((note) => {
       if (note.tags && note.tags.length > 0) {
         note.tags.forEach((tag) => tagSet.add(tag))
       }
     })
     return Array.from(tagSet).sort()
-  }, [notes])
+  }, [initialNotes])
 
   // Filter notes by folder, tag, and search term
-  const filteredNotes = notes.filter((note) => {
-    const matchesFolder = folderFilter ? note.folderId === folderFilter : true
-    const matchesTag = tagFilter ? note.tags && note.tags.includes(tagFilter) : true
-    const matchesSearch = searchTerm
-      ? note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        note.content.toLowerCase().includes(searchTerm.toLowerCase())
-      : true
-    return matchesFolder && matchesTag && matchesSearch
-  })
+  const filteredNotes = useMemo(() => {
+    return initialNotes.filter((note) => {
+      const matchesFolder = folderFilter ? note.folderId === folderFilter : true
+      const matchesTag = tagFilter ? note.tags && note.tags.includes(tagFilter) : true
+      const matchesSearch = searchTerm
+        ? note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          note.content.toLowerCase().includes(searchTerm.toLowerCase())
+        : true
+      return matchesFolder && matchesTag && matchesSearch
+    })
+  }, [initialNotes, folderFilter, tagFilter, searchTerm])
 
   // Get active filter names for display
-  const activeFolderName = folderFilter ? folders.find((f) => f.id === folderFilter)?.name : null
+  const activeFolderName = folderFilter ? initialFolders.find((f) => f.id === folderFilter)?.name : null
   const activeTagName = tagFilter
 
   // Clear all filters
@@ -90,114 +101,116 @@ export function NoteGrid({ notes, folders }: NoteGridProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4">
-        {/* Filter dropdowns */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            
-
-            {/* Folder dropdown */}
-            <div className="relative" ref={folderDropdownRef}>
-              <button
-                onClick={() => setFolderDropdownOpen(!folderDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-secondary text-secondary-foreground text-sm hover:bg-secondary/80"
-              >
-                <FolderIcon size={14} />
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        {/* Filter controls */}
+        <div className="flex items-center gap-3 w-full">
+          {/* Folder dropdown */}
+          <div className="relative flex-1" ref={folderDropdownRef}>
+            <button
+              onClick={() => setFolderDropdownOpen(!folderDropdownOpen)}
+              className="flex items-center justify-between w-full h-10 px-4 bg-card text-card-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <FolderIcon size={16} className="text-muted-foreground" />
                 <span>{activeFolderName || "All Folders"}</span>
-                <ChevronDown size={14} />
-              </button>
+              </div>
+              <ChevronDown size={16} className="text-muted-foreground" />
+            </button>
 
-              {folderDropdownOpen && (
-                <div className="absolute z-10 mt-1 w-48 bg-card border border-border shadow-md">
-                  <div className="py-1">
+            {folderDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-card border border-border shadow-md">
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setFolderFilter(null)
+                      setFolderDropdownOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm ${
+                      folderFilter === null ? "bg-blue text-white" : "hover:bg-secondary"
+                    }`}
+                  >
+                    All Folders
+                  </button>
+                  {initialFolders.map((folder) => (
                     <button
+                      key={folder.id}
                       onClick={() => {
-                        setFolderFilter(null)
+                        setFolderFilter(folder.id)
                         setFolderDropdownOpen(false)
                       }}
                       className={`w-full text-left px-4 py-2 text-sm ${
-                        folderFilter === null ? "bg-blue text-white" : "hover:bg-secondary"
+                        folderFilter === folder.id ? "bg-blue text-white" : "hover:bg-secondary"
                       }`}
                     >
-                      All Folders
+                      {folder.name}
                     </button>
-                    {folders.map((folder) => (
-                      <button
-                        key={folder.id}
-                        onClick={() => {
-                          setFolderFilter(folder.id)
-                          setFolderDropdownOpen(false)
-                        }}
-                        className={`w-full text-left px-4 py-2 text-sm ${
-                          folderFilter === folder.id ? "bg-blue text-white" : "hover:bg-secondary"
-                        }`}
-                      >
-                        {folder.name}
-                      </button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
-              )}
-            </div>
-
-            {/* Tag dropdown */}
-            <div className="relative" ref={tagDropdownRef}>
-              <button
-                onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-secondary text-secondary-foreground text-sm hover:bg-secondary/80"
-              >
-                <TagIcon size={14} />
-                <span>{activeTagName || "All Tags"}</span>
-                <ChevronDown size={14} />
-              </button>
-
-              {tagDropdownOpen && (
-                <div className="absolute z-10 mt-1 w-48 bg-card border border-border shadow-md">
-                  <div className="py-1 max-h-60 overflow-y-auto">
-                    <button
-                      onClick={() => {
-                        setTagFilter(null)
-                        setTagDropdownOpen(false)
-                      }}
-                      className={`w-full text-left px-4 py-2 text-sm ${
-                        tagFilter === null ? "bg-blue text-white" : "hover:bg-secondary"
-                      }`}
-                    >
-                      All Tags
-                    </button>
-                    {allTags.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => {
-                          setTagFilter(tag)
-                          setTagDropdownOpen(false)
-                        }}
-                        className={`w-full text-left px-4 py-2 text-sm ${
-                          tagFilter === tag ? "bg-blue text-white" : "hover:bg-secondary"
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Clear filters button - only show if filters are active */}
-            {(folderFilter || tagFilter) && (
-              <button
-                onClick={clearAllFilters}
-                className="flex items-center gap-1 px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground"
-              >
-                <X size={14} />
-                <span>Clear</span>
-              </button>
+              </div>
             )}
           </div>
 
-          {/* Active filter display */}
-          <div className="flex flex-wrap gap-2">
+          {/* Tag dropdown */}
+          <div className="relative flex-1" ref={tagDropdownRef}>
+            <button
+              onClick={() => setTagDropdownOpen(!tagDropdownOpen)}
+              className="flex items-center justify-between w-full h-10 px-4 bg-card text-card-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <TagIcon size={16} className="text-muted-foreground" />
+                <span>{activeTagName || "All Tags"}</span>
+              </div>
+              <ChevronDown size={16} className="text-muted-foreground" />
+            </button>
+
+            {tagDropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-card border border-border shadow-md">
+                <div className="py-1 max-h-60 overflow-y-auto">
+                  <button
+                    onClick={() => {
+                      setTagFilter(null)
+                      setTagDropdownOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm ${
+                      tagFilter === null ? "bg-blue text-white" : "hover:bg-secondary"
+                    }`}
+                  >
+                    All Tags
+                  </button>
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => {
+                        setTagFilter(tag)
+                        setTagDropdownOpen(false)
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm ${
+                        tagFilter === tag ? "bg-blue text-white" : "hover:bg-secondary"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Clear filters button - only show if filters are active */}
+          {(folderFilter || tagFilter) && (
+            <button
+              onClick={clearAllFilters}
+              className="h-10 px-4 bg-card text-card-foreground hover:bg-secondary/80 transition-colors flex items-center gap-2"
+            >
+              <X size={16} />
+              <span>Clear</span>
+            </button>
+          )}
+        </div>
+
+        {/* Active filter display */}
+        {(activeFolderName || activeTagName) && (
+          <div className="flex flex-wrap gap-2 mt-2">
             {activeFolderName && (
               <div className="inline-flex items-center px-3 py-1 bg-blue text-white text-sm">
                 <FolderIcon size={14} className="mr-2" />
@@ -217,15 +230,21 @@ export function NoteGrid({ notes, folders }: NoteGridProps) {
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredNotes.map((note) => (
-          <div key={note.id} className="h-full">
-            <NoteCard note={note} />
+        {filteredNotes.length > 0 ? (
+          filteredNotes.map((note) => (
+            <div key={note.id} className="h-full">
+              <NoteCard note={note} />
+            </div>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-12 text-muted-foreground">
+            No notes found with the current filters.
           </div>
-        ))}
+        )}
       </div>
     </div>
   )

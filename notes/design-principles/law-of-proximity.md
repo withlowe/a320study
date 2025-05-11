@@ -1,3 +1,13 @@
+---
+title: Example Note 5
+tags: [example, markdown]
+pattern: lines
+takeaways:
+  - You can use YAML frontmatter for metadata
+  - Notes are organized by folders
+  - The design stays consistent
+---
+
 # Law of Proximity
 
 Objects that are near each other tend to be perceived as a group.

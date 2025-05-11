@@ -1,4 +1,12 @@
-# Law of Prägnanz
+---
+title: Example Note 4 
+tags: [example, markdown]
+pattern: triangles
+takeaways:
+  - You can use YAML frontmatter for metadata
+  - Notes are organized by folders
+  - The design stays consistent
+---# Law of Prägnanz
 
 People will perceive and interpret ambiguous or complex images as the simplest form possible, because it requires the least cognitive effort.
 

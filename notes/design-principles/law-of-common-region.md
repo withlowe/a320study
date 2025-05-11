@@ -1,3 +1,13 @@
+---
+title: Example Note 3
+tags: [example, markdown]
+pattern: shapes
+takeaways:
+  - You can use YAML frontmatter for metadata
+  - Notes are organized by folders
+  - The design stays consistent
+---
+
 # Law of Common Region
 
 Elements tend to be perceived into groups if they are sharing an area with a clearly defined boundary.

@@ -1,36 +1,12 @@
-"use client"
-
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import { getNotes, getFolders } from "@/lib/notes"
 import { NoteGrid } from "@/components/note-grid"
-import { notesData, foldersData } from "@/lib/notes-data"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Search } from "lucide-react"
-import { useSearchParams } from "next/navigation"
 
 export default function Home() {
-  const [searchValue, setSearchValue] = useState("")
-  const searchParams = useSearchParams()
-
-  // Handle tag filtering from URL
-  useEffect(() => {
-    const tag = searchParams.get("tag")
-    if (tag) {
-      // Dispatch a custom event to set the tag filter in the NoteGrid component
-      const event = new CustomEvent("filter-tag", { detail: tag })
-      window.dispatchEvent(event)
-    }
-  }, [searchParams])
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setSearchValue(value)
-
-    // Dispatch a custom event to update the search in the NoteGrid component
-    const event = new CustomEvent("search-notes", { detail: value })
-    window.dispatchEvent(event)
-  }
+  // Get notes and folders
+  const notes = getNotes()
+  const folders = getFolders()
 
   return (
     <main className="min-h-screen bg-background">
@@ -41,7 +17,7 @@ export default function Home() {
               <h1 className="text-4xl font-bold text-foreground mb-1">A320 Study</h1>
               <p className="text-muted-foreground">A collection of principles and concepts</p>
             </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative flex-1 md:w-64">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <Search size={18} className="text-muted-foreground" />
@@ -49,9 +25,8 @@ export default function Home() {
                 <input
                   type="text"
                   placeholder="Search notes..."
-                  className="w-full bg-card border-0 text-card-foreground pl-10 pr-4 py-2 focus:ring-0 focus:outline-none"
-                  value={searchValue}
-                  onChange={handleSearch}
+                  className="w-full h-10 bg-card border-0 text-card-foreground pl-10 pr-4 py-2 focus:ring-0 focus:outline-none"
+                  id="search-input"
                 />
               </div>
               <ThemeToggle />
@@ -61,7 +36,31 @@ export default function Home() {
       </header>
 
       <div className="container mx-auto px-6 py-8">
-        <NoteGrid notes={notesData} folders={foldersData} />
+        {notes.length === 0 ? (
+          <div className="bg-card border border-border p-8 text-center">
+            <h2 className="text-2xl font-bold text-card-foreground mb-4">No Notes Found</h2>
+            <p className="text-muted-foreground mb-6">
+              Add markdown files to the <code>/notes</code> directory to get started.
+            </p>
+            <div className="bg-secondary p-4 text-left max-w-lg mx-auto">
+              <p className="text-sm font-mono mb-2 text-muted-foreground">Example note structure:</p>
+              <pre className="text-xs overflow-x-auto p-2 bg-background">
+                {`---
+title: My First Note
+tags: [example, getting-started]
+pattern: dots
+---
+
+## Overview
+
+This is my first note in the library.
+`}
+              </pre>
+            </div>
+          </div>
+        ) : (
+          <NoteGrid initialNotes={notes} initialFolders={folders} />
+        )}
       </div>
     </main>
   )

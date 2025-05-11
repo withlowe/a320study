@@ -1,3 +1,13 @@
+---
+title: Example Note 8
+tags: [example, markdown]
+pattern: concentric
+takeaways:
+  - You can use YAML frontmatter for metadata
+  - Notes are organized by folders
+  - The design stays consistent
+---
+
 # Occam's Razor
 
 Among competing hypotheses that predict equally well, the one with the fewest assumptions should be selected.

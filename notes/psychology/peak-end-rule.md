@@ -1,3 +1,13 @@
+---
+title: Example Note 7 
+tags: [example, markdown]
+pattern: grid
+takeaways:
+  - You can use YAML frontmatter for metadata
+  - Notes are organized by folders
+  - The design stays consistent
+---
+
 # Peak-End Rule
 
 People judge an experience largely based on how they felt at its peak and at its end, rather than the total sum or average of every moment of the experience.

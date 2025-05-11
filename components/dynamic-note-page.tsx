@@ -1,24 +1,45 @@
-import { getNote, getFolders, getRelatedNotes } from "@/lib/notes"
-import { notFound } from "next/navigation"
+"use client"
+
+import { useState } from "react"
 import { VisualPattern } from "@/components/visual-pattern"
 import Link from "next/link"
-import { ArrowLeft, Folder, Tag } from "lucide-react"
+import { ArrowLeft, Save, Folder, Tag } from "lucide-react"
 import { MarkdownRenderer } from "@/components/markdown-renderer"
+import { MarkdownEditor } from "@/components/markdown-editor"
 import { ThemeToggle } from "@/components/theme-toggle"
+import type { Note, Folder as FolderType } from "@/lib/types"
 
-export default function NotePage({ params }: { params: { id: string } }) {
-  // Get the note
-  const note = getNote(params.id)
+interface DynamicNotePageProps {
+  note: Note | undefined
+  folders: FolderType[]
+  relatedNotes: Note[]
+}
 
-  // If note doesn't exist, show 404
+export function DynamicNotePage({ note, folders, relatedNotes }: DynamicNotePageProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedContent, setEditedContent] = useState(note?.content || "")
+
   if (!note) {
-    notFound()
+    return (
+      <div className="min-h-screen bg-background p-8 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-foreground mb-4">Note not found</h1>
+          <Link href="/" className="text-blue-500 hover:underline flex items-center justify-center gap-2">
+            <ArrowLeft size={16} />
+            Back to library
+          </Link>
+        </div>
+      </div>
+    )
   }
 
-  // Get folders and related notes
-  const folders = getFolders()
   const folder = note.folderId ? folders.find((f) => f.id === note.folderId) : null
-  const relatedNotes = getRelatedNotes(note.id)
+
+  const handleSave = () => {
+    // In a real app, this would save to a database or file
+    // For now, we'll just toggle back to view mode
+    setIsEditing(false)
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -29,7 +50,22 @@ export default function NotePage({ params }: { params: { id: string } }) {
               <ArrowLeft size={18} />
               Back to library
             </Link>
-            <ThemeToggle />
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <button
+                onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
+                className="px-4 py-2 flex items-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              >
+                {isEditing ? (
+                  <>
+                    <Save size={16} />
+                    Save
+                  </>
+                ) : (
+                  "Edit"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -83,9 +119,13 @@ export default function NotePage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="md:col-span-2 bg-card border border-border/30">
-            <div className="p-8">
-              <MarkdownRenderer content={note.content} />
-            </div>
+            {isEditing ? (
+              <MarkdownEditor value={editedContent} onChange={setEditedContent} />
+            ) : (
+              <div className="p-8">
+                <MarkdownRenderer content={note.content} />
+              </div>
+            )}
           </div>
         </div>
 
