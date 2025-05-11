@@ -1,5 +1,5 @@
 ---
-title: Example Note
+title: Project Overview
 tags: [example, markdown, notes]
 pattern: dots
 takeaways:
