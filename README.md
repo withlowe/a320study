@@ -1,55 +1,58 @@
 # Notes Library
 
-A markdown-based notes library with a clean blue/white design.
+A super simple markdown-based notes library.
 
-## Adding New Notes
+## How to Use
 
-To add new notes to the library, simply add markdown files to the `/notes` directory. The notes are organized in folders that match the folder structure in the application.
+1. Create a `/notes` directory in the project root
+2. Add markdown files to this directory
+3. Organize files in folders for categorization
 
-### Markdown Format
+## Folder Structure
 
-Each note should follow this format:
-
-\`\`\`markdown
-# Note Title
-
-Brief description or introduction.
-
-## Overview
-
-Detailed explanation of the concept.
-
-## Additional Sections
-
-More content organized in sections.
-
-## Examples
-
-Examples of the concept in practice.
-
-| Header 1 | Header 2 |
-| -------- | -------- |
-| Content  | Content  |
-
-## Tags
-* tag1
-* tag2
-* tag3
+\`\`\`
+/notes
+  /design-principles
+    law-of-proximity.md
+    law-of-pragnanz.md
+  /psychology
+    peak-end-rule.md
+  example.md  # Root note (no folder)
 \`\`\`
 
-### Tags
+## Markdown Format
 
-Tags are extracted from the markdown content and displayed with the note. They can be added in two ways:
+Use YAML frontmatter for metadata:
 
-1. **Dedicated Tags Section**: Add a "## Tags" section at the end of your markdown file with a list of tags (either bullet points or comma-separated)
-2. **Hashtags in Content**: Use hashtags like #tag-name throughout your content
+\`\`\`markdown
+---
+title: Note Title
+tags: [tag1, tag2]
+pattern: dots
+takeaways:
+  - Key point 1
+  - Key point 2
+---
+
+## Content starts here
+
+Your note content...
+\`\`\`
+
+## Available Frontmatter Options
+
+| Option | Description | Values |
+|--------|-------------|--------|
+| title | The note title | Any text |
+| tags | Tags for categorization | Array or comma-separated list |
+| pattern | Visual pattern type | dots, shapes, triangles, lines, circles, grid, concentric |
+| takeaways | Key points | Array of strings |
 
 ## Features
 
-- Markdown rendering with support for tables and lists
-- Consistent blue/white design for all notes
-- Folder organization for notes
-- Light/dark mode toggle
-- Visual patterns for each note
-- Filtering by folder
-- Responsive design that maintains proportions at all screen sizes
+- Simple file-based organization
+- YAML frontmatter for metadata
+- Folder-based categorization
+- Tag filtering
+- Search functionality
+- Light/dark mode
