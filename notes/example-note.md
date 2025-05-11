@@ -2,7 +2,7 @@
 title: Project Overview
 tags: [example, markdown, notes]
 pattern: dots
-takeaways:
+Summary:
   - You can use YAML frontmatter at the top of your markdown files
   - Tags can be specified as an array or comma-separated string
   - Pattern type can be specified to control visual appearance
